@@ -1,0 +1,8 @@
+{
+  "name": "RavanaForge",
+  "description": "The Multi-Agent Framework for AI Software Engineering. Orchestrate collaborative AI agent teams (Architect, Tech Lead, Coder, QA, Security, DevOps) to autonomously plan, code, test, and ship production software.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
