@@ -7,15 +7,13 @@ import {
   FolderGit2, 
   Search, 
   Clock, 
-  Trash2, 
   Flame, 
-  CheckCircle2, 
   Users, 
   Server, 
   ChevronRight,
-  ShieldAlert,
-  Sparkles,
-  ExternalLink
+  Database,
+  Code2,
+  Sparkles
 } from 'lucide-react';
 import { SavedPrompt, AIStudioViewMode } from '../types/aistudio';
 import { Agent, VirtualFile } from '../types/forge';
@@ -45,13 +43,16 @@ export const AIStudioLeftRail: React.FC<AIStudioLeftRailProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewMenu, setShowNewMenu] = useState(false);
-  const [activeTab, setActiveTab] = useState<'prompts' | 'files' | 'agents'>('prompts');
+  const [activeTab, setActiveTab] = useState<'prompts' | 'files' | 'agents' | 'system'>('prompts');
 
   if (!isOpen) return null;
 
   const filteredPrompts = savedPrompts.filter((p) =>
     p.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const executiveChiefs = agents.filter(a => a.isExecutive);
+  const specialistStaff = agents.filter(a => !a.isExecutive);
 
   return (
     <aside className="w-64 border-r border-[#282a2c] bg-[#131314] flex flex-col shrink-0 select-none h-[calc(100vh-3.5rem)] overflow-hidden">
@@ -107,20 +108,67 @@ export const AIStudioLeftRail: React.FC<AIStudioLeftRailProps> = ({
             <div className="h-px bg-[#282a2c] my-1" />
 
             <button
+              onClick={() => { onChangeViewMode('firm_org'); setShowNewMenu(false); }}
+              className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg text-[#7cacf8] hover:bg-[#282a2c] text-left transition"
+            >
+              <Users className="w-4 h-4 text-[#7cacf8]" />
+              <div>
+                <div className="font-medium">Firm Org Directory</div>
+                <div className="text-[10px] text-[#8e918f]">41 Sovereign Engineers (5 Chiefs + 36 Staff)</div>
+              </div>
+            </button>
+
+            <button
               onClick={() => { onChangeViewMode('cockpit'); setShowNewMenu(false); }}
               className="w-full flex items-center space-x-2.5 px-3 py-2 text-xs rounded-lg text-amber-300 hover:bg-[#282a2c] text-left transition"
             >
               <Flame className="w-4 h-4 text-amber-400" />
               <div>
-                <div className="font-medium">Raptor 3 Mission</div>
-                <div className="text-[10px] text-amber-400/70">6-Agent Autonomous Foundry</div>
+                <div className="font-medium">Swarm Cockpit</div>
+                <div className="text-[10px] text-amber-400/70">Autonomous Multi-Agent Foundry</div>
               </div>
             </button>
           </div>
         )}
       </div>
 
-      {/* Segmented Sub-navigation: Prompts / Files / Agents */}
+      {/* Quick Navigation Strips */}
+      <div className="px-3 py-2 border-b border-[#282a2c] space-y-0.5">
+        <button
+          onClick={() => onChangeViewMode('firm_org')}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#c4c7c5] hover:text-white hover:bg-[#1e1f20] transition"
+        >
+          <div className="flex items-center space-x-2">
+            <Users className="w-3.5 h-3.5 text-[#7cacf8]" />
+            <span>Firm Org Directory</span>
+          </div>
+          <span className="text-[10px] font-mono text-[#7cacf8] bg-[#1a73e8]/15 px-1.5 py-0.2 rounded">41</span>
+        </button>
+
+        <button
+          onClick={() => onChangeViewMode('database')}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#c4c7c5] hover:text-white hover:bg-[#1e1f20] transition"
+        >
+          <div className="flex items-center space-x-2">
+            <Database className="w-3.5 h-3.5 text-[#81c995]" />
+            <span>Database Console</span>
+          </div>
+          <span className="text-[10px] font-mono text-[#81c995] bg-[#81c995]/15 px-1.5 py-0.2 rounded">Firestore</span>
+        </button>
+
+        <button
+          onClick={() => onChangeViewMode('api')}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#c4c7c5] hover:text-white hover:bg-[#1e1f20] transition"
+        >
+          <div className="flex items-center space-x-2">
+            <Code2 className="w-3.5 h-3.5 text-[#fdd663]" />
+            <span>REST API Console</span>
+          </div>
+          <span className="text-[10px] font-mono text-[#fdd663] bg-[#fdd663]/15 px-1.5 py-0.2 rounded">5 Routes</span>
+        </button>
+      </div>
+
+      {/* Segmented Sub-navigation: Prompts / Files / Staff */}
       <div className="flex items-center px-3 pt-2 pb-1 border-b border-[#282a2c] gap-1">
         <button
           onClick={() => setActiveTab('prompts')}
@@ -150,7 +198,7 @@ export const AIStudioLeftRail: React.FC<AIStudioLeftRailProps> = ({
               : 'text-[#8e918f] hover:text-[#e3e3e3]'
           }`}
         >
-          Swarm (6)
+          Staff (41)
         </button>
       </div>
 
@@ -203,10 +251,7 @@ export const AIStudioLeftRail: React.FC<AIStudioLeftRailProps> = ({
         )}
 
         {activeTab === 'files' && (
-          <div className="space-y-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-[#8e918f] px-2 py-1">
-              Active Virtual Workspace
-            </div>
+          <div className="space-y-0.5">
             {files.map((file) => (
               <button
                 key={file.id}
@@ -228,35 +273,48 @@ export const AIStudioLeftRail: React.FC<AIStudioLeftRailProps> = ({
         )}
 
         {activeTab === 'agents' && (
-          <div className="space-y-1">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-[#8e918f] px-2 py-1">
-              Sovereign AI Commanders
-            </div>
-            {agents.map((agent) => (
-              <div
-                key={agent.id}
-                onClick={() => onChangeViewMode('cockpit')}
-                className="p-2 rounded-lg bg-[#1e1f20]/50 hover:bg-[#1e1f20] border border-transparent hover:border-[#282a2c] cursor-pointer transition"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-sm">{agent.avatarSymbol}</span>
-                    <span className="text-xs font-medium text-white">{agent.name}</span>
-                  </div>
-                  <span className="text-[9px] font-mono text-[#7cacf8] bg-[#1a73e8]/10 px-1 py-0.2 rounded">
-                    {agent.role}
-                  </span>
-                </div>
-                <div className="text-[10px] text-[#8e918f] truncate mt-1">
-                  {agent.title}
-                </div>
+          <div className="space-y-3">
+            {/* Executive Chiefs */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-[#8e918f] px-2 py-0.5">
+                <span>5 Executive Chiefs</span>
+                <span className="text-[#fdd663]">Leadership</span>
               </div>
-            ))}
+              {executiveChiefs.map((agent) => (
+                <div
+                  key={agent.id}
+                  onClick={() => onChangeViewMode('firm_org')}
+                  className="p-2 rounded-lg bg-[#1e1f20]/60 hover:bg-[#1e1f20] border border-[#282a2c]/40 hover:border-[#7cacf8]/40 cursor-pointer transition"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <span className="text-sm">{agent.avatarSymbol}</span>
+                      <span className="text-xs font-semibold text-white">{agent.name}</span>
+                    </div>
+                    <span className="text-[9px] font-mono text-[#fdd663] bg-[#fdd663]/10 px-1 py-0.2 rounded border border-[#fdd663]/20">
+                      Chief
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-[#8e918f] truncate mt-0.5">
+                    {agent.title}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* View Full 41 Roster CTA */}
+            <div className="pt-2 border-t border-[#282a2c]">
+              <button
+                onClick={() => onChangeViewMode('firm_org')}
+                className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg bg-[#1a73e8]/20 hover:bg-[#1a73e8]/30 border border-[#1a73e8]/40 text-[#7cacf8] text-xs font-medium transition"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Open Full 41-Staff Org</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-
     </aside>
   );
 };

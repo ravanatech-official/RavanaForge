@@ -5,7 +5,21 @@ export type AgentRole =
   | 'backend_eng'
   | 'qa_engineer'
   | 'security_auditor'
-  | 'devops_eng';
+  | 'devops_eng'
+  | 'data_engineer'
+  | 'sre'
+  | 'ui_ux_designer'
+  | 'mobile_engineer'
+  | 'chaos_engineer'
+  | 'performance_profiler';
+
+export type FirmDivision = 
+  | 'Executive Leadership'
+  | 'Architecture & Systems'
+  | 'Core Backend & APIs'
+  | 'Frontend & UI Systems'
+  | 'QA, Security & Resilience'
+  | 'DevOps & Cloud Infra';
 
 export interface Agent {
   id: string;
@@ -13,6 +27,8 @@ export interface Agent {
   commanderTitle?: string;
   avatarSymbol?: string;
   role: AgentRole;
+  division: FirmDivision;
+  isExecutive?: boolean;
   avatarColor: string;
   title: string;
   model: string;
@@ -23,6 +39,47 @@ export interface Agent {
   currentAction?: string;
   tokensUsed: number;
   confidence: number;
+  ticketsCount?: number;
+  assignedTickets?: string[];
+}
+
+export interface FirmTicket {
+  id: string;
+  ticketCode: string;
+  title: string;
+  description: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  status: 'backlog' | 'in_progress' | 'in_review' | 'completed';
+  assignedToId: string;
+  assignedToName: string;
+  division: FirmDivision;
+  createdAt: string;
+  updatedAt: string;
+  linkedFile?: string;
+}
+
+export interface VirtualCommit {
+  id: string;
+  hash: string;
+  message: string;
+  author: string;
+  authorAvatar?: string;
+  timestamp: string;
+  filesChanged: number;
+  insertions: number;
+  deletions: number;
+  branch: string;
+}
+
+export interface ApiLogRecord {
+  id: string;
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  endpoint: string;
+  statusCode: number;
+  latencyMs: number;
+  timestamp: string;
+  requestBody?: Record<string, any>;
+  responseSnippet: string;
 }
 
 export interface AgentMessage {

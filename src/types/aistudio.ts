@@ -55,7 +55,15 @@ export interface AIStudioParams {
   stopSequences: string[];
 }
 
-export type AIStudioViewMode = 'chat' | 'freeform' | 'cockpit' | 'code' | 'executive';
+export type AIStudioViewMode = 
+  | 'chat' 
+  | 'freeform' 
+  | 'cockpit' 
+  | 'firm_org' 
+  | 'database' 
+  | 'api' 
+  | 'code' 
+  | 'executive';
 
 export interface SavedPrompt {
   id: string;

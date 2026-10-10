@@ -5,7 +5,10 @@ import {
   INITIAL_TEST_CASES, 
   INITIAL_SECURITY_ISSUES, 
   INITIAL_MISSION,
-  SOLUTION_BLUEPRINTS
+  SOLUTION_BLUEPRINTS,
+  INITIAL_TICKETS,
+  INITIAL_COMMITS,
+  INITIAL_API_LOGS
 } from './data/defaultData';
 import { 
   AVAILABLE_MODELS, 
@@ -21,7 +24,10 @@ import {
   SecurityVulnerability, 
   ProjectMission,
   CanvasViewMode,
-  SolutionBlueprint
+  SolutionBlueprint,
+  FirmTicket,
+  VirtualCommit,
+  ApiLogRecord
 } from './types/forge';
 import { 
   AIStudioParams, 
@@ -34,6 +40,10 @@ import { AIStudioLeftRail } from './components/AIStudioLeftRail';
 import { AIStudioParametersDrawer } from './components/AIStudioParametersDrawer';
 import { AIStudioChatCanvas } from './components/AIStudioChatCanvas';
 import { AIStudioFreeformCanvas } from './components/AIStudioFreeformCanvas';
+import { BottomEngineDrawer } from './components/BottomEngineDrawer';
+import { SoftwareFirmOrgDirectory } from './components/SoftwareFirmOrgDirectory';
+import { DatabaseConsole } from './components/DatabaseConsole';
+import { ApiConsole } from './components/ApiConsole';
 import { GetCodeModal } from './components/GetCodeModal';
 import { SharePromptModal } from './components/SharePromptModal';
 import { AgentSwarmVisualizer } from './components/AgentSwarmVisualizer';
@@ -47,44 +57,47 @@ import { ExportModal } from './components/ExportModal';
 import { generateStudioResponse } from './utils/aiStudioGenerator';
 
 export default function App() {
-  // Google AI Studio State
+  // Google AI Studio View State (Raptor-3 Minimalist Framework)
   const [activeViewMode, setActiveViewMode] = useState<AIStudioViewMode>('chat');
-  const [promptTitle, setPromptTitle] = useState<string>('RavanaForge Core Architecture');
+  const [promptTitle, setPromptTitle] = useState<string>('RavanaForge Autonomous Firm Engine');
   const [activePromptId, setActivePromptId] = useState<string>('prompt-1');
   const [studioParams, setStudioParams] = useState<AIStudioParams>(DEFAULT_STUDIO_PARAMS);
   const [studioTurns, setStudioTurns] = useState<AIStudioTurn[]>(INITIAL_STUDIO_TURNS);
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>(SAVED_PROMPTS_LIST);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   
-  // UI Panels
+  // Collapsible Drawers (Raptor 3 Minimalist Workspace)
   const [isLeftRailOpen, setIsLeftRailOpen] = useState<boolean>(true);
-  const [isRightDrawerOpen, setIsRightDrawerOpen] = useState<boolean>(true);
+  const [isRightDrawerOpen, setIsRightDrawerOpen] = useState<boolean>(false);
+  const [isBottomDrawerOpen, setIsBottomDrawerOpen] = useState<boolean>(false);
+  const [bottomDrawerTab, setBottomDrawerTab] = useState<'database' | 'api' | 'firm_org' | 'logs' | 'tests'>('database');
   const [isGetCodeOpen, setIsGetCodeOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
 
-  // Swarm & Workspace State
+  // 1000% Powerful Underlying Architecture (41 Staff, DB Collections, API Engine)
   const [agents, setAgents] = useState<Agent[]>(INITIAL_AGENTS);
+  const [tickets, setTickets] = useState<FirmTicket[]>(INITIAL_TICKETS);
+  const [commits, setCommits] = useState<VirtualCommit[]>(INITIAL_COMMITS);
+  const [apiLogs, setApiLogs] = useState<ApiLogRecord[]>(INITIAL_API_LOGS);
+
+  // Workspace & Mission State
   const [mission, setMission] = useState<ProjectMission>(INITIAL_MISSION);
   const [files, setFiles] = useState<VirtualFile[]>(INITIAL_FILES);
   const [activeFileId, setActiveFileId] = useState<string>(INITIAL_FILES[0].id);
   const [testCases, setTestCases] = useState<TestCase[]>(INITIAL_TEST_CASES);
   const [securityIssues, setSecurityIssues] = useState<SecurityVulnerability[]>(INITIAL_SECURITY_ISSUES);
   const [canvasViewMode, setCanvasViewMode] = useState<CanvasViewMode>('code');
-  const [showRoiDrawer, setShowRoiDrawer] = useState<boolean>(false);
   const [activeAgentId, setActiveAgentId] = useState<string | undefined>('agent_backend_eng');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState<string | undefined>(undefined);
   const [isTesting, setIsTesting] = useState<boolean>(false);
   const [isScanning, setIsScanning] = useState<boolean>(false);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [simulationSpeed, setSimulationSpeed] = useState<number>(1);
-  const [stepIndex, setStepIndex] = useState<number>(0);
 
-  // Swarm Messages & Terminal
+  // Swarm Messages & Terminal Logs
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
       id: 'msg-0',
       agentId: 'agent_architect',
-      agentName: 'Prahasta',
+      agentName: 'Prahasta (Chief Architect)',
       agentRole: 'architect',
       avatarColor: 'indigo',
       timestamp: '10:42:01',
@@ -95,7 +108,7 @@ export default function App() {
     {
       id: 'msg-1',
       agentId: 'agent_architect',
-      agentName: 'Prahasta',
+      agentName: 'Prahasta (Chief Architect)',
       agentRole: 'architect',
       avatarColor: 'indigo',
       timestamp: '10:42:15',
@@ -107,7 +120,7 @@ export default function App() {
     {
       id: 'msg-2',
       agentId: 'agent_tech_lead',
-      agentName: 'Indrajit',
+      agentName: 'Indrajit (Tech Lead)',
       agentRole: 'tech_lead',
       avatarColor: 'purple',
       timestamp: '10:42:30',
@@ -123,7 +136,7 @@ export default function App() {
     {
       id: 'msg-3',
       agentId: 'agent_backend_eng',
-      agentName: 'Kumbhakarna',
+      agentName: 'Kumbhakarna (Backend Lead)',
       agentRole: 'backend_eng',
       avatarColor: 'blue',
       timestamp: '10:43:05',
@@ -138,8 +151,8 @@ export default function App() {
   const [terminalLogs, setTerminalLogs] = useState<string[]>([
     '[FORGE-INIT] RavanaForge Google AI Studio initialized on Linux x64.',
     '[FIREBASE] Connected to live project "ravanaforge" at https://ravanaforge.web.app.',
-    '[AGENT-SWARM] 6 Sovereign Commanders active: Prahasta, Indrajit, Kumbhakarna, Mayasura, Atikaya, Mahodara.',
-    '[MODEL-RUN] Active Model: Gemini 2.5 Flash with Search Grounding and Code Execution.',
+    '[RAPTOR-3] Engine Architecture: Part-elimination doctrine active. Zero microservice slop.',
+    '[FIRM-ORG] 41 Sovereign Staff Active: 5 Executive Chiefs + 36 Production Specialists.',
   ]);
 
   // Modals
@@ -147,6 +160,26 @@ export default function App() {
   const [isWorkflowOpen, setIsWorkflowOpen] = useState(false);
   const [isNewMissionOpen, setIsNewMissionOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // Global Keyboard Shortcuts (Ctrl+Enter to Run, Ctrl+` to toggle bottom console, Ctrl+B for sidebar)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRunPrompt();
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key === '`' || e.key === 'j')) {
+        e.preventDefault();
+        setIsBottomDrawerOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        setIsLeftRailOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [studioTurns, studioParams, isGenerating]);
 
   // Calculate live token consumption
   const currentTokenCount = studioTurns.reduce((acc, t) => acc + (t.tokens || Math.round(t.content.length / 4)), 0) + Math.round(studioParams.systemInstruction.length / 4);
@@ -165,7 +198,6 @@ export default function App() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    // If customPrompt was passed and not already at end of turns
     if (customPrompt) {
       setStudioTurns((prev) => [...prev, userTurn]);
     }
@@ -194,6 +226,13 @@ export default function App() {
         ...prev,
         `[AI-STUDIO] Synthesis completed: ${modelTurn.tokens || 350} tokens generated in ${modelTurn.thoughtSeconds || 10}s.`,
       ]);
+
+      // Distribute token credit to active commanders
+      setAgents((prev) =>
+        prev.map((a) =>
+          a.isExecutive ? { ...a, tokensUsed: a.tokensUsed + Math.round((modelTurn.tokens || 350) / 5) } : a
+        )
+      );
     } catch (err) {
       console.error(err);
     } finally {
@@ -201,7 +240,106 @@ export default function App() {
     }
   };
 
-  // Regenerate last model response
+  // Dispatch task to specific agent
+  const handleDispatchTaskToAgent = (agentId: string, directive: string) => {
+    const targetAgent = agents.find((a) => a.id === agentId);
+    if (!targetAgent) return;
+
+    setAgents((prev) =>
+      prev.map((a) =>
+        a.id === agentId
+          ? {
+              ...a,
+              status: 'coding',
+              currentAction: directive.slice(0, 80),
+              tokensUsed: a.tokensUsed + 380,
+            }
+          : a
+      )
+    );
+
+    const newCode = `TCK-${Math.floor(Math.random() * 900 + 100)}`;
+    const newTicket: FirmTicket = {
+      id: `tck-${Date.now()}`,
+      ticketCode: newCode,
+      title: directive.slice(0, 70),
+      description: directive,
+      priority: 'high',
+      status: 'in_progress',
+      assignedToId: targetAgent.id,
+      assignedToName: targetAgent.name,
+      division: targetAgent.division,
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setTickets((prev) => [newTicket, ...prev]);
+
+    const newMsg: AgentMessage = {
+      id: `msg-${Date.now()}`,
+      agentId: targetAgent.id,
+      agentName: targetAgent.name,
+      agentRole: targetAgent.role,
+      avatarColor: targetAgent.avatarColor,
+      timestamp: new Date().toLocaleTimeString(),
+      content: `Dispatched directive: "${directive}"`,
+      thought: `Deconstructing directive for ${targetAgent.division}. Executing atomic implementation within bounds.`,
+      type: 'message',
+    };
+    setMessages((prev) => [...prev, newMsg]);
+
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[DISPATCH] ${targetAgent.name} received mandate: "${directive.slice(0, 60)}..."`,
+    ]);
+
+    setApiLogs((prev) => [
+      {
+        id: `log-${Date.now()}`,
+        method: 'POST',
+        endpoint: '/api/firm/dispatch',
+        statusCode: 200,
+        latencyMs: 28,
+        timestamp: new Date().toLocaleTimeString(),
+        requestBody: { agentId, directive },
+        responseSnippet: `{"ticket":"${newCode}","status":"dispatched","agent":"${targetAgent.name}"}`,
+      },
+      ...prev,
+    ]);
+  };
+
+  const handleCreateTicket = (ticketData: Partial<FirmTicket>) => {
+    const newTicket: FirmTicket = {
+      id: `tck-${Date.now()}`,
+      ticketCode: ticketData.ticketCode || `TCK-${Math.floor(Math.random() * 900 + 100)}`,
+      title: ticketData.title || 'Untitled Sprint Ticket',
+      description: ticketData.description || '',
+      priority: ticketData.priority || 'medium',
+      status: ticketData.status || 'in_progress',
+      assignedToId: ticketData.assignedToId || agents[0].id,
+      assignedToName: ticketData.assignedToName || agents[0].name,
+      division: ticketData.division || 'Core Backend & APIs',
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setTickets((prev) => [newTicket, ...prev]);
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[TICKET-CREATED] Logged ${newTicket.ticketCode}: ${newTicket.title}`,
+    ]);
+  };
+
+  const handleDeleteTicket = (id: string) => {
+    setTickets((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleExecuteApiCall = (log: ApiLogRecord) => {
+    setApiLogs((prev) => [log, ...prev]);
+    setTerminalLogs((prev) => [
+      ...prev,
+      `[API-CALL] ${log.method} ${log.endpoint} -> 200 OK (${log.latencyMs}ms)`,
+    ]);
+  };
+
   const handleRegenerateLast = () => {
     const lastUserTurn = [...studioTurns].reverse().find((t) => t.role === 'user');
     if (lastUserTurn) {
@@ -209,7 +347,6 @@ export default function App() {
     }
   };
 
-  // 1-Click Apply Code into Virtual IDE Workspace
   const handleApplyCodeToFile = (filename: string, code: string) => {
     const existingFile = files.find((f) => f.path === filename || f.name === filename.split('/').pop());
     if (existingFile) {
@@ -237,14 +374,26 @@ export default function App() {
       setActiveFileId(newFile.id);
     }
 
+    const newCommit: VirtualCommit = {
+      id: `c-${Date.now()}`,
+      hash: Math.random().toString(16).substring(2, 9),
+      message: `apply(studio): sync synthesized code into ${filename}`,
+      author: 'AI Studio Swarm',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      filesChanged: 1,
+      insertions: code.split('\n').length,
+      deletions: 0,
+      branch: 'main',
+    };
+    setCommits((prev) => [newCommit, ...prev]);
+
     setTerminalLogs((prev) => [
       ...prev,
-      `[WORKSPACE-APPLY] Synced code from AI Studio turn into ${filename}.`,
+      `[WORKSPACE-APPLY] Synced code from AI Studio turn into ${filename}. Commit: ${newCommit.hash}`,
     ]);
     setActiveViewMode('code');
   };
 
-  // Freeform Run handler
   const handleRunFreeform = async (promptText: string): Promise<string> => {
     const response = await generateStudioResponse({
       prompt: promptText,
@@ -254,7 +403,6 @@ export default function App() {
     return response.content;
   };
 
-  // Switch / New Prompt
   const handleSelectPrompt = (id: string) => {
     setActivePromptId(id);
     const found = savedPrompts.find((p) => p.id === id);
@@ -293,7 +441,6 @@ export default function App() {
     }
   };
 
-  // Rollback file changes in IDE
   const handleRollbackFile = (fileId: string) => {
     setFiles((prev) =>
       prev.map((f) => {
@@ -309,14 +456,12 @@ export default function App() {
     );
   };
 
-  // Approve file changes in IDE
   const handleApproveFile = (fileId: string) => {
     setFiles((prev) =>
       prev.map((f) => (f.id === fileId ? { ...f, status: 'clean' } : f))
     );
   };
 
-  // Run Tests
   const handleRunTests = () => {
     setIsTesting(true);
     setTimeout(() => {
@@ -326,10 +471,9 @@ export default function App() {
         ...prev,
         '[TEST-RUN] PASS: All 5 test suites passed (0 race conditions, 0 memory leaks).',
       ]);
-    }, 800);
+    }, 700);
   };
 
-  // Run Security Scan
   const handleRunSecurityScan = () => {
     setIsScanning(true);
     setTimeout(() => {
@@ -339,65 +483,16 @@ export default function App() {
         ...prev,
         '[SAST-SCAN] 100% Passed. Zero open vulnerabilities. CWE-400 remediated.',
       ]);
-    }, 800);
+    }, 700);
   };
 
-  // Swarm simulation step
-  const executeSimulationStep = () => {
-    const nextStep = (stepIndex + 1) % 5;
-    setStepIndex(nextStep);
-    const timeStr = new Date().toLocaleTimeString();
-
-    if (nextStep === 1) {
-      setActiveAgentId('agent_backend_eng');
-      setTerminalLogs((prev) => [
-        ...prev,
-        `[AST-PATCH] Kumbhakarna patched src/cluster/raft_node.go with 64MB buffer guard.`,
-      ]);
-    } else if (nextStep === 2) {
-      setActiveAgentId('agent_qa_engineer');
-      setTestCases((prev) => prev.map((tc) => ({ ...tc, status: 'passed' })));
-      setTerminalLogs((prev) => [
-        ...prev,
-        `[TEST-RUN] go test -race ./tests/... -> PASS (5/5 suites passed in 479ms)`,
-      ]);
-    } else if (nextStep === 3) {
-      setActiveAgentId('agent_security_auditor');
-      setSecurityIssues((prev) => prev.map((sec) => ({ ...sec, status: 'fixed' })));
-      setTerminalLogs((prev) => [
-        ...prev,
-        `[SAST-AUDIT] Mahodara verified CWE-400 fix. Overall Security Score: 100/100.`,
-      ]);
-    } else if (nextStep === 4) {
-      setActiveAgentId('agent_tech_lead');
-      setTerminalLogs((prev) => [
-        ...prev,
-        `[FORGE-COMPLETE] Mission milestone achieved. All 5 pipeline stages verified.`,
-      ]);
-      setIsRunning(false);
-    }
-  };
-
-  // Auto simulation timer
-  useEffect(() => {
-    let interval: any;
-    if (isRunning) {
-      const delay = Math.max(1000 / simulationSpeed, 500);
-      interval = setInterval(() => {
-        executeSimulationStep();
-      }, delay);
-    }
-    return () => clearInterval(interval);
-  }, [isRunning, simulationSpeed, stepIndex]);
-
-  // Swarm directive from chat feed
   const handleUserPrompt = (text: string) => {
     setMessages((prev) => [
       ...prev,
       {
         id: `user-${Date.now()}`,
         agentId: 'user',
-        agentName: 'Human Supervisor',
+        agentName: 'Executive Supervisor',
         agentRole: 'tech_lead',
         avatarColor: 'emerald',
         timestamp: new Date().toLocaleTimeString(),
@@ -411,7 +506,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-[#131314] text-[#e3e3e3] overflow-hidden font-sans">
-      {/* Google AI Studio Top Navigation Bar */}
+      {/* Raptor-3 Ultra-Clean Google AI Studio Top Navigation Bar */}
       <AIStudioHeader
         promptTitle={promptTitle}
         onUpdatePromptTitle={setPromptTitle}
@@ -425,12 +520,14 @@ export default function App() {
         onToggleLeftRail={() => setIsLeftRailOpen(!isLeftRailOpen)}
         isRightDrawerOpen={isRightDrawerOpen}
         onToggleRightDrawer={() => setIsRightDrawerOpen(!isRightDrawerOpen)}
+        isBottomDrawerOpen={isBottomDrawerOpen}
+        onToggleBottomDrawer={() => setIsBottomDrawerOpen(!isBottomDrawerOpen)}
         activeModelName={activeModel.name}
       />
 
-      {/* Main Studio Work Area */}
+      {/* Main Studio Viewport */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Collapsible Rail */}
+        {/* Left Collapsible Rail Drawer */}
         <AIStudioLeftRail
           isOpen={isLeftRailOpen}
           savedPrompts={savedPrompts}
@@ -440,12 +537,25 @@ export default function App() {
           agents={agents}
           files={files}
           onSelectFile={(id) => { setActiveFileId(id); setActiveViewMode('code'); }}
-          onChangeViewMode={setActiveViewMode}
+          onChangeViewMode={(mode) => {
+            if (mode === 'database') {
+              setBottomDrawerTab('database');
+              setIsBottomDrawerOpen(true);
+            } else if (mode === 'api') {
+              setBottomDrawerTab('api');
+              setIsBottomDrawerOpen(true);
+            } else if (mode === 'firm_org') {
+              setBottomDrawerTab('firm_org');
+              setIsBottomDrawerOpen(true);
+            } else {
+              setActiveViewMode(mode);
+            }
+          }}
         />
 
-        {/* Center Canvas / Dynamic Workspace Views */}
+        {/* Center Canvas / Pristine Workspaces */}
         <main className="flex-1 flex flex-col overflow-hidden bg-[#131314] relative">
-          {/* Mode 1: Authentic Google AI Studio Chat Canvas */}
+          {/* View 1: Authentic Google AI Studio Chat Canvas */}
           {activeViewMode === 'chat' && (
             <AIStudioChatCanvas
               turns={studioTurns}
@@ -459,7 +569,7 @@ export default function App() {
             />
           )}
 
-          {/* Mode 2: Google AI Studio Freeform Canvas */}
+          {/* View 2: Google AI Studio Freeform Canvas */}
           {activeViewMode === 'freeform' && (
             <AIStudioFreeformCanvas
               params={studioParams}
@@ -467,10 +577,9 @@ export default function App() {
             />
           )}
 
-          {/* Mode 3: Raptor 3 Multi-Agent Cockpit Foundry */}
+          {/* View 3: Multi-Agent Swarm Cockpit (41 Agents Active) */}
           {activeViewMode === 'cockpit' && (
             <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0B0F19]">
-              {/* Agent Swarm Visualizer Strip */}
               <AgentSwarmVisualizer
                 agents={agents}
                 stages={mission.stages}
@@ -480,7 +589,6 @@ export default function App() {
                 selectedAgentFilter={selectedAgentFilter}
               />
 
-              {/* 40/60 Split: Agent Stream + Quick Canvas */}
               <div className="flex-1 flex overflow-hidden">
                 <div className="w-[42%] min-w-[340px] max-w-xl h-full border-r border-slate-800">
                   <AgentFeed
@@ -541,7 +649,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Mode 4: Virtual IDE & Diffs */}
+          {/* View 4: Full-Stack Code Workspace & Diffs */}
           {activeViewMode === 'code' && (
             <div className="flex-1 h-full overflow-hidden bg-[#0B0F19]">
               <CodeWorkspace
@@ -584,7 +692,47 @@ export default function App() {
             </div>
           )}
 
-          {/* Mode 5: Executive Solutions Deck */}
+          {/* View 5: Full Org Directory View (When requested directly) */}
+          {activeViewMode === 'firm_org' && (
+            <SoftwareFirmOrgDirectory
+              agents={agents}
+              tickets={tickets}
+              onDispatchTaskToAgent={handleDispatchTaskToAgent}
+              onSelectAgentForChat={(agentId) => {
+                const target = agents.find((a) => a.id === agentId);
+                if (target) {
+                  handleRunPrompt(`@${target.name} (${target.title}): Provide your technical specification for the current mission.`);
+                  setActiveViewMode('chat');
+                }
+              }}
+              onCreateTicket={handleCreateTicket}
+            />
+          )}
+
+          {/* View 6: Standalone Database Console (When requested directly) */}
+          {activeViewMode === 'database' && (
+            <DatabaseConsole
+              agents={agents}
+              tickets={tickets}
+              commits={commits}
+              vulnerabilities={securityIssues}
+              apiLogs={apiLogs}
+              mission={mission}
+              onAddTicket={handleCreateTicket}
+              onDeleteTicket={handleDeleteTicket}
+            />
+          )}
+
+          {/* View 7: Standalone REST API Tester (When requested directly) */}
+          {activeViewMode === 'api' && (
+            <ApiConsole
+              agents={agents}
+              tickets={tickets}
+              onExecuteApiCall={handleExecuteApiCall}
+            />
+          )}
+
+          {/* View 8: Executive Solutions Deck */}
           {activeViewMode === 'executive' && (
             <div className="flex-1 h-full overflow-y-auto bg-[#0B0F19]">
               <ExecutiveSolutionsDeck
@@ -610,7 +758,7 @@ export default function App() {
           )}
         </main>
 
-        {/* Right Collapsible Parameters Drawer (Google AI Studio Run Settings) */}
+        {/* Right Collapsible Parameters Drawer (Google AI Studio Settings) */}
         <AIStudioParametersDrawer
           isOpen={isRightDrawerOpen}
           onClose={() => setIsRightDrawerOpen(false)}
@@ -621,7 +769,36 @@ export default function App() {
         />
       </div>
 
-      {/* Google AI Studio Iconic Get Code Modal */}
+      {/* Raptor-3 Collapsible Bottom Engine Drawer (Database, API, 41 Staff, Logs & Tests) */}
+      <BottomEngineDrawer
+        isOpen={isBottomDrawerOpen}
+        onToggle={() => setIsBottomDrawerOpen(!isBottomDrawerOpen)}
+        activeTab={bottomDrawerTab}
+        onChangeTab={setBottomDrawerTab}
+        agents={agents}
+        tickets={tickets}
+        commits={commits}
+        vulnerabilities={securityIssues}
+        apiLogs={apiLogs}
+        terminalLogs={terminalLogs}
+        testCases={testCases}
+        mission={mission}
+        onDispatchTaskToAgent={handleDispatchTaskToAgent}
+        onSelectAgentForChat={(agentId) => {
+          const target = agents.find((a) => a.id === agentId);
+          if (target) {
+            handleRunPrompt(`@${target.name} (${target.title}): Provide your technical specification for the current mission.`);
+            setActiveViewMode('chat');
+          }
+        }}
+        onAddTicket={handleCreateTicket}
+        onDeleteTicket={handleDeleteTicket}
+        onExecuteApiCall={handleExecuteApiCall}
+        onRunTests={handleRunTests}
+        onRunSecurityScan={handleRunSecurityScan}
+      />
+
+      {/* Google AI Studio Get Code Modal */}
       <GetCodeModal
         isOpen={isGetCodeOpen}
         onClose={() => setIsGetCodeOpen(false)}
